@@ -1,0 +1,57 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+const int sensorPin = A0; // Pin del sensor analógico
+
+void setup() {
+  Serial.begin(9600);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;);
+  }
+  display.clearDisplay();
+}
+
+void loop() {
+  display.clearDisplay();
+  
+  // Leer el valor del sensor
+  int sensorValue = analogRead(sensorPin);
+  
+  // Convertir el valor del sensor en RPM
+  float rpm = map(sensorValue, 0, 1023, 0, 10000); // Ajusta el rango según sea necesario
+
+  // Dibujar el tacómetro
+  drawLinearTachometer(rpm);
+
+  display.display();
+  delay(100);
+}
+
+void drawLinearTachometer(float rpm) {
+  int startX = 10; // Posición inicial X del tacómetro
+  int startY = 30; // Posición inicial Y del tacómetro
+  int width = SCREEN_WIDTH - 20; // Ancho del tacómetro
+  int height = 10; // Altura del tacómetro
+  int maxRPM = 10000; // RPM máximo
+  int barLength = map(rpm, 0, maxRPM, 0, width); // Longitud de la barra
+
+  // Dibujar el contorno del tacómetro
+  display.drawRect(startX, startY, width, height, SSD1306_WHITE);
+  
+  // Dibujar la barra de RPM
+  display.fillRect(startX, startY, barLength, height, SSD1306_WHITE);
+
+  // Dibujar la escala de RPM
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(startX, startY - 10);
+  display.print("RPM: ");
+  display.print(rpm, 0); // Sin decimales
+}
